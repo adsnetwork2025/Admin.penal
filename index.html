@@ -1,102 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel</title>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #ecf0f1;
+    }
+    .request-box {
+      background-color: #fff;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
     .btn {
-      padding: 10px 20px;
-      margin: 5px;
-      background: #007bff;
+      background-color: #2980b9;
       color: white;
+      padding: 10px 20px;
       border: none;
       border-radius: 5px;
       cursor: pointer;
-    }
-    .card {
-      background: #eee;
-      padding: 10px;
-      border-radius: 5px;
       margin: 10px;
+    }
+    .btn:hover {
+      background-color: #2471a3;
+    }
+    .status {
+      font-size: 18px;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-<h1>Admin Panel</h1>
 
-<h2>Deposit Requests</h2>
-<button onclick="loadDeposit()">Load Deposit</button>
-<div id="depositInfo"></div>
+  <h1>Admin Panel</h1>
 
-<h2>Withdraw Requests</h2>
-<button onclick="loadWithdraw()">Load Withdraw</button>
-<div id="withdrawInfo"></div>
+  <!-- Request Section -->
+  <div class="request-box">
+    <h3>User Deposit Request</h3>
+    <p><strong>Amount:</strong> ৳100.00</p>
+    <p><strong>Transaction ID:</strong> TRX123456789</p>
+    <button class="btn" onclick="acceptRequest()">Accept</button>
+    <button class="btn" onclick="rejectRequest()">Reject</button>
 
-<script>
-const code = "199234";
+    <div class="status" id="requestStatus"></div>
+  </div>
 
-function loadDeposit() {
-  const data = localStorage.getItem("user_" + code);
-  if (!data) return alert("No deposit found.");
-  const user = JSON.parse(data);
-  document.getElementById("depositInfo").innerHTML = `
-    <div class="card">
-      <p><strong>Code:</strong> ${user.code}</p>
-      <p><strong>Txn ID:</strong> ${user.txn}</p>
-      <button class="btn" onclick="acceptUser()">✅ Accept</button>
-      <button class="btn" onclick="rejectUser()">❌ Reject</button>
-    </div>`;
-}
+  <h3>User Withdraw Request</h3>
+  <div class="request-box">
+    <p><strong>Withdraw Amount:</strong> ৳250.00</p>
+    <p><strong>Withdraw Method:</strong> bKash</p>
+    <p><strong>Withdraw Number:</strong> 017xxxxxxxx</p>
+    <button class="btn" onclick="acceptWithdrawRequest()">Accept Withdraw</button>
+    <button class="btn" onclick="rejectWithdrawRequest()">Reject Withdraw</button>
+  </div>
 
-function acceptUser() {
-  let user = JSON.parse(localStorage.getItem("user_" + code));
-  user.verified = true;
-  user.lastCredited = Date.now();
-  localStorage.setItem("user_" + code, JSON.stringify(user));
-  alert("User verified.");
-  document.getElementById("depositInfo").innerHTML = "";
-}
+  <script>
+    function acceptRequest() {
+      document.getElementById("requestStatus").innerText = "Deposit request accepted. Account verified.";
+      alert("User account verified.");
+    }
 
-function rejectUser() {
-  localStorage.removeItem("user_" + code);
-  alert("User rejected.");
-  document.getElementById("depositInfo").innerHTML = "";
-}
+    function rejectRequest() {
+      document.getElementById("requestStatus").innerText = "Deposit request rejected.";
+      alert("User account rejected.");
+    }
 
-function loadWithdraw() {
-  const data = localStorage.getItem("withdraw_" + code);
-  if (!data) return alert("No withdraw request found.");
-  const req = JSON.parse(data);
-  if (req.status !== "pending") return alert("Already processed.");
+    function acceptWithdrawRequest() {
+      alert("Withdraw request accepted.");
+    }
 
-  document.getElementById("withdrawInfo").innerHTML = `
-    <div class="card">
-      <p><strong>Method:</strong> ${req.method}</p>
-      <p><strong>Number:</strong> ${req.number}</p>
-      <p><strong>Amount:</strong> ৳${req.amount}</p>
-      <button class="btn" onclick="approveWithdraw()">✅ Accept</button>
-      <button class="btn" onclick="rejectWithdraw()">❌ Reject</button>
-    </div>`;
-}
+    function rejectWithdrawRequest() {
+      alert("Withdraw request rejected.");
+    }
 
-function approveWithdraw() {
-  let user = JSON.parse(localStorage.getItem("user_" + code));
-  let req = JSON.parse(localStorage.getItem("withdraw_" + code));
-  if (user.balance < req.amount) return alert("Insufficient balance.");
-  user.balance -= req.amount;
-  localStorage.setItem("user_" + code, JSON.stringify(user));
-  req.status = "approved";
-  localStorage.setItem("withdraw_" + code, JSON.stringify(req));
-  alert("Withdraw approved.");
-  document.getElementById("withdrawInfo").innerHTML = "";
-}
+    // Simulate receiving request from user
+    const depositRequest = JSON.parse(localStorage.getItem('depositRequest'));
+    if (depositRequest) {
+      document.querySelector('.request-box').innerHTML = `
+        <h3>User Deposit Request</h3>
+        <p><strong>Amount:</strong> ৳${depositRequest.depositAmount}</p>
+        <p><strong>Transaction ID:</strong> ${depositRequest.transactionId}</p>
+        <button class="btn" onclick="acceptRequest()">Accept</button>
+        <button class="btn" onclick="rejectRequest()">Reject</button>
 
-function rejectWithdraw() {
-  let req = JSON.parse(localStorage.getItem("withdraw_" + code));
-  req.status = "rejected";
-  localStorage.setItem("withdraw_" + code, JSON.stringify(req));
-  alert("Withdraw rejected.");
-  document.getElementById("withdrawInfo").innerHTML = "";
-}
-</script>
+        <div class="status" id="requestStatus"></div>
+      `;
+    }
+  </script>
+
 </body>
 </html>
