@@ -1,96 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel - Deposit Requests</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
-    .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
-    table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-    button { padding: 8px 16px; cursor: pointer; }
-    .accept { background-color: green; color: white; }
-    .reject { background-color: red; color: white; }
-    .message { font-weight: bold; margin-top: 20px; }
+    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px #aaa; }
+    .request { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+    .buttons { margin-top: 10px; }
+    .accept { background: green; color: white; padding: 5px 10px; border: none; margin-right: 5px; cursor: pointer; }
+    .reject { background: red; color: white; padding: 5px 10px; border: none; cursor: pointer; }
   </style>
 </head>
 <body>
-
 <div class="container">
-  <h2>Admin Panel - Deposit Requests</h2>
-
-  <table id="depositRequestsTable">
-    <thead>
-      <tr>
-        <th>User ID</th>
-        <th>Deposit Amount</th>
-        <th>Method</th>
-        <th>Transaction ID</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="requestList"></tbody>
-  </table>
-
-  <div class="message" id="responseMessage"></div>
+  <h2>Deposit Requests</h2>
+  <div id="requests"></div>
 </div>
 
 <script>
-// Simulating Admin Panel by fetching deposit requests from localStorage
-function loadDepositRequests() {
-  const depositRequests = JSON.parse(localStorage.getItem('depositRequests') || '[]');
-  const tableBody = document.getElementById('requestList');
-  tableBody.innerHTML = ''; // Clear the table before reloading
+  function loadRequests() {
+    const requestBox = document.getElementById("requests");
+    requestBox.innerHTML = "";
 
-  depositRequests.forEach(request => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${request.id}</td>
-      <td>${request.amount}</td>
-      <td>${request.method}</td>
-      <td>${request.trx}</td>
-      <td>
-        <button class="accept" onclick="acceptRequest(${request.id}, ${request.amount})">Accept</button>
-        <button class="reject" onclick="rejectRequest(${request.id})">Reject</button>
-      </td>
-    `;
-    tableBody.appendChild(row);
-  });
-}
+    const depositRequests = JSON.parse(localStorage.getItem("depositRequests") || "[]");
 
-// Accept Deposit Request
-function acceptRequest(requestId, amount) {
-  // Update User's Balance
-  let userBalance = parseInt(localStorage.getItem('balance') || '0');
-  userBalance += amount;
-  localStorage.setItem('balance', userBalance);
-  document.getElementById('responseMessage').innerText = `Deposit of ৳${amount} accepted. User's balance updated.`;
+    if (depositRequests.length === 0) {
+      requestBox.innerHTML = "<p>No deposit requests.</p>";
+      return;
+    }
 
-  // Remove the request from the deposit list
-  removeRequest(requestId);
-}
+    depositRequests.forEach((req, index) => {
+      const div = document.createElement("div");
+      div.className = "request";
+      div.innerHTML = `
+        <strong>UID:</strong> ${req.userId}<br>
+        <strong>Method:</strong> ${req.method}<br>
+        <strong>Amount:</strong> ৳${req.amount}<br>
+        <strong>Transaction ID:</strong> ${req.trx}<br>
+        <div class="buttons">
+          <button class="accept" onclick="acceptRequest(${index})">Accept</button>
+          <button class="reject" onclick="rejectRequest(${index})">Reject</button>
+        </div>
+      `;
+      requestBox.appendChild(div);
+    });
+  }
 
-// Reject Deposit Request
-function rejectRequest(requestId) {
-  // Remove the request from the deposit list
-  removeRequest(requestId);
-  document.getElementById('responseMessage').innerText = `Deposit request rejected.`;
-}
+  function acceptRequest(index) {
+    let depositRequests = JSON.parse(localStorage.getItem("depositRequests") || "[]");
+    const req = depositRequests[index];
 
-// Remove Request from Local Storage
-function removeRequest(requestId) {
-  let depositRequests = JSON.parse(localStorage.getItem('depositRequests') || '[]');
-  depositRequests = depositRequests.filter(request => request.id !== requestId);
-  localStorage.setItem('depositRequests', JSON.stringify(depositRequests));
-  loadDepositRequests();
-}
+    const balanceKey = `balance_${req.userId}`;
+    let currentBalance = parseInt(localStorage.getItem(balanceKey)) || 0;
+    currentBalance += parseInt(req.amount);
+    localStorage.setItem(balanceKey, currentBalance);
 
-// Load deposit requests when the page is loaded
-window.onload = function() {
-  loadDepositRequests();
-};
+    depositRequests.splice(index, 1); // remove from list
+    localStorage.setItem("depositRequests", JSON.stringify(depositRequests));
+
+    alert(`Accepted! ৳${req.amount} added to UID: ${req.userId}`);
+    loadRequests();
+  }
+
+  function rejectRequest(index) {
+    let depositRequests = JSON.parse(localStorage.getItem("depositRequests") || "[]");
+    const req = depositRequests[index];
+
+    depositRequests.splice(index, 1);
+    localStorage.setItem("depositRequests", JSON.stringify(depositRequests));
+
+    alert(`Rejected request from UID: ${req.userId}`);
+    loadRequests();
+  }
+
+  loadRequests();
 </script>
-
 </body>
 </html>
