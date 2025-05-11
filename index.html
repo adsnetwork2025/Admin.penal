@@ -3,191 +3,94 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel - Deposit and Withdraw Requests</title>
+  <title>Admin Panel - Deposit Requests</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
-    .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px #aaa; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+    table { width: 100%; margin-top: 20px; border-collapse: collapse; }
     th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-    th { background-color: #f4f4f4; }
-    button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    button { padding: 8px 16px; cursor: pointer; }
     .accept { background-color: green; color: white; }
     .reject { background-color: red; color: white; }
+    .message { font-weight: bold; margin-top: 20px; }
   </style>
 </head>
 <body>
+
 <div class="container">
-  <h2>Admin Panel</h2>
-  <h3>Deposit Requests</h3>
-  <table id="depositTable">
+  <h2>Admin Panel - Deposit Requests</h2>
+
+  <table id="depositRequestsTable">
     <thead>
       <tr>
-        <th>ID</th>
+        <th>User ID</th>
+        <th>Deposit Amount</th>
         <th>Method</th>
-        <th>Amount</th>
         <th>Transaction ID</th>
-        <th>Action</th>
+        <th>Actions</th>
       </tr>
     </thead>
-    <tbody id="depositRequestsBody">
-      <!-- Deposit Requests will be displayed here -->
-    </tbody>
+    <tbody id="requestList"></tbody>
   </table>
 
-  <h3>Withdraw Requests</h3>
-  <table id="withdrawTable">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Method</th>
-        <th>Account Number</th>
-        <th>Amount</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="withdrawRequestsBody">
-      <!-- Withdraw Requests will be displayed here -->
-    </tbody>
-  </table>
+  <div class="message" id="responseMessage"></div>
 </div>
 
 <script>
-  // Mock Data: Simulate getting requests from Local Storage or Database
-  const depositRequests = JSON.parse(localStorage.getItem('depositRequests')) || [];
-  const withdrawRequests = JSON.parse(localStorage.getItem('withdrawRequests')) || [];
-  let userBalance = parseFloat(localStorage.getItem('userBalance')) || 0; // Get current balance, default to 0 if not available
+// Simulating Admin Panel by fetching deposit requests from localStorage
+function loadDepositRequests() {
+  const depositRequests = JSON.parse(localStorage.getItem('depositRequests') || '[]');
+  const tableBody = document.getElementById('requestList');
+  tableBody.innerHTML = ''; // Clear the table before reloading
 
-  // Function to display deposit requests
-  function displayDepositRequests() {
-    const tbody = document.getElementById('depositRequestsBody');
-    tbody.innerHTML = ''; // Clear previous rows
-    depositRequests.forEach((request) => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${request.id}</td>
-        <td>${request.method}</td>
-        <td>${request.amount}</td>
-        <td>${request.trx}</td>
-        <td>
-          <button class="accept" onclick="acceptDeposit(${request.id})">Accept</button>
-          <button class="reject" onclick="rejectDeposit(${request.id})">Reject</button>
-        </td>
-      `;
-      tbody.appendChild(row);
-    });
-  }
+  depositRequests.forEach(request => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${request.id}</td>
+      <td>${request.amount}</td>
+      <td>${request.method}</td>
+      <td>${request.trx}</td>
+      <td>
+        <button class="accept" onclick="acceptRequest(${request.id}, ${request.amount})">Accept</button>
+        <button class="reject" onclick="rejectRequest(${request.id})">Reject</button>
+      </td>
+    `;
+    tableBody.appendChild(row);
+  });
+}
 
-  // Function to display withdraw requests
-  function displayWithdrawRequests() {
-    const tbody = document.getElementById('withdrawRequestsBody');
-    tbody.innerHTML = ''; // Clear previous rows
-    withdrawRequests.forEach((request) => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${request.id}</td>
-        <td>${request.method}</td>
-        <td>${request.accountNumber}</td>
-        <td>${request.amount}</td>
-        <td>
-          <button class="accept" onclick="acceptWithdraw(${request.id})">Approve</button>
-          <button class="reject" onclick="rejectWithdraw(${request.id})">Reject</button>
-        </td>
-      `;
-      tbody.appendChild(row);
-    });
-  }
+// Accept Deposit Request
+function acceptRequest(requestId, amount) {
+  // Update User's Balance
+  let userBalance = parseInt(localStorage.getItem('balance') || '0');
+  userBalance += amount;
+  localStorage.setItem('balance', userBalance);
+  document.getElementById('responseMessage').innerText = `Deposit of ৳${amount} accepted. User's balance updated.`;
 
-  // Accept Deposit
-  function acceptDeposit(id) {
-    const request = depositRequests.find(r => r.id === id);
-    if (request) {
-      // Add deposit amount to user's balance
-      userBalance += parseFloat(request.amount);
-      
-      // Save the updated balance back to localStorage
-      localStorage.setItem('userBalance', userBalance.toFixed(2));
+  // Remove the request from the deposit list
+  removeRequest(requestId);
+}
 
-      // Show updated balance
-      alert(`Deposit Accepted: Method: ${request.method}, Amount: ৳${request.amount}`);
-      alert(`Updated Balance: ৳${userBalance.toFixed(2)}`);
+// Reject Deposit Request
+function rejectRequest(requestId) {
+  // Remove the request from the deposit list
+  removeRequest(requestId);
+  document.getElementById('responseMessage').innerText = `Deposit request rejected.`;
+}
 
-      // Remove request after approval
-      const index = depositRequests.indexOf(request);
-      depositRequests.splice(index, 1);
-      localStorage.setItem('depositRequests', JSON.stringify(depositRequests));
-      displayDepositRequests(); // Refresh the table
-    }
-  }
+// Remove Request from Local Storage
+function removeRequest(requestId) {
+  let depositRequests = JSON.parse(localStorage.getItem('depositRequests') || '[]');
+  depositRequests = depositRequests.filter(request => request.id !== requestId);
+  localStorage.setItem('depositRequests', JSON.stringify(depositRequests));
+  loadDepositRequests();
+}
 
-  // Reject Deposit
-  function rejectDeposit(id) {
-    const request = depositRequests.find(r => r.id === id);
-    if (request) {
-      alert(`Deposit Rejected: Method: ${request.method}, Amount: ৳${request.amount}`);
-
-      // Remove request after rejection
-      const index = depositRequests.indexOf(request);
-      depositRequests.splice(index, 1);
-      localStorage.setItem('depositRequests', JSON.stringify(depositRequests));
-      displayDepositRequests(); // Refresh the table
-    }
-  }
-
-  // Accept Withdraw
-  function acceptWithdraw(id) {
-    const request = withdrawRequests.find(r => r.id === id);
-    if (request) {
-      alert(`Withdraw Approved: Method: ${request.method}, Amount: ৳${request.amount}`);
-      // Perform action to process withdrawal for the user (e.g., update balance, notify user)
-
-      // Send Approval Notification to Telegram
-      sendWithdrawNotificationToTelegram(request);
-
-      // Remove request after approval (or keep it for tracking)
-      const index = withdrawRequests.indexOf(request);
-      withdrawRequests.splice(index, 1);
-      localStorage.setItem('withdrawRequests', JSON.stringify(withdrawRequests));
-      displayWithdrawRequests(); // Refresh the table
-    }
-  }
-
-  // Reject Withdraw
-  function rejectWithdraw(id) {
-    const request = withdrawRequests.find(r => r.id === id);
-    if (request) {
-      alert(`Withdraw Rejected: Method: ${request.method}, Amount: ৳${request.amount}`);
-
-      // Remove request after rejection
-      const index = withdrawRequests.indexOf(request);
-      withdrawRequests.splice(index, 1);
-      localStorage.setItem('withdrawRequests', JSON.stringify(withdrawRequests));
-      displayWithdrawRequests(); // Refresh the table
-    }
-  }
-
-  // Function to send Withdraw Approval Notification to Telegram
-  function sendWithdrawNotificationToTelegram(request) {
-    const botToken = '7630275924:AAHpKBQZ0k7ZylkO5tbp56CIBK-WxUHAE68';
-    const chatId = '6593402184';
-    const message = `Withdraw Approved:\nMethod: ${request.method}\nAccount Number: ${request.accountNumber}\nAmount: ৳${request.amount}`;
-
-    fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.ok) {
-          console.log("Withdraw notification sent to Telegram.");
-        } else {
-          console.error("Error sending message to Telegram:", data.description);
-        }
-      })
-      .catch(error => {
-        console.error("Error sending message to Telegram:", error);
-      });
-  }
-
-  // Initial Call to display all requests
-  displayDepositRequests();
-  displayWithdrawRequests();
+// Load deposit requests when the page is loaded
+window.onload = function() {
+  loadDepositRequests();
+};
 </script>
+
 </body>
 </html>
