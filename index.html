@@ -55,6 +55,7 @@
   // Mock Data: Simulate getting requests from Local Storage or Database
   const depositRequests = JSON.parse(localStorage.getItem('depositRequests')) || [];
   const withdrawRequests = JSON.parse(localStorage.getItem('withdrawRequests')) || [];
+  let userBalance = parseFloat(localStorage.getItem('userBalance')) || 0; // Get current balance, default to 0 if not available
 
   // Function to display deposit requests
   function displayDepositRequests() {
@@ -100,10 +101,17 @@
   function acceptDeposit(id) {
     const request = depositRequests.find(r => r.id === id);
     if (request) {
-      alert(`Deposit Accepted: Method: ${request.method}, Amount: ৳${request.amount}`);
-      // Perform action to credit balance for the user (e.g., update database)
+      // Add deposit amount to user's balance
+      userBalance += parseFloat(request.amount);
       
-      // Remove request after approval (or keep it for tracking)
+      // Save the updated balance back to localStorage
+      localStorage.setItem('userBalance', userBalance.toFixed(2));
+
+      // Show updated balance
+      alert(`Deposit Accepted: Method: ${request.method}, Amount: ৳${request.amount}`);
+      alert(`Updated Balance: ৳${userBalance.toFixed(2)}`);
+
+      // Remove request after approval
       const index = depositRequests.indexOf(request);
       depositRequests.splice(index, 1);
       localStorage.setItem('depositRequests', JSON.stringify(depositRequests));
@@ -116,7 +124,7 @@
     const request = depositRequests.find(r => r.id === id);
     if (request) {
       alert(`Deposit Rejected: Method: ${request.method}, Amount: ৳${request.amount}`);
-      
+
       // Remove request after rejection
       const index = depositRequests.indexOf(request);
       depositRequests.splice(index, 1);
