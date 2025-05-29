@@ -1,43 +1,104 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Panel - Hridoy Officials (√)</title>
+  <title>Admin Panel - Redeem Code</title>
   <style>
-    body { font-family: Arial; background: #f0f2f5; padding: 20px; }
-    .panel { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
-    input, textarea { width: 100%; margin-top: 10px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
-    button { background: #1877f2; color: white; padding: 10px; border: none; border-radius: 5px; margin-top: 15px; cursor: pointer; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f8f8;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 80%;
+      max-width: 300px;
+    }
+
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    .code-list {
+      margin-top: 30px;
+      text-align: left;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
 
-<div class="panel">
-  <h2>পোস্ট তৈরি করুন</h2>
-  <textarea id="text" placeholder="পোস্টের টেক্সট লিখুন"></textarea>
-  <input type="file" id="file">
-  <button onclick="submitPost()">পোস্ট করুন</button>
-  <div id="status"></div>
-</div>
+  <h1>Admin Panel - Create Redeem Code</h1>
+  <input type="text" id="code" placeholder="Enter Redeem Code">
+  <input type="number" id="amount" placeholder="Enter Bonus Amount">
+  <br>
+  <button onclick="addCode()">Apply</button>
 
-<script>
-function submitPost() {
-  const text = document.getElementById("text").value;
-  const file = document.getElementById("file").files[0];
-  const formData = new FormData();
-  formData.append("text", text);
-  if (file) formData.append("file", file);
+  <div class="code-list" id="codeList">
+    <h3>Existing Codes</h3>
+    <ul id="codeDisplay"></ul>
+  </div>
 
-  fetch("save_post.php", {
-    method: "POST",
-    body: formData
-  }).then(res => res.text()).then(res => {
-    document.getElementById("status").innerText = res;
-    document.getElementById("text").value = '';
-    document.getElementById("file").value = '';
-  });
-}
-</script>
+  <script>
+    let redeemCodes = JSON.parse(localStorage.getItem('redeemCodes')) || {};
+
+    function addCode() {
+      const code = document.getElementById('code').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value);
+
+      if (!code || isNaN(amount) || amount <= 0) {
+        alert('Please enter a valid code and amount.');
+        return;
+      }
+
+      if (redeemCodes[code]) {
+        alert('This code already exists.');
+        return;
+      }
+
+      redeemCodes[code] = amount;
+      localStorage.setItem('redeemCodes', JSON.stringify(redeemCodes));
+      document.getElementById('code').value = '';
+      document.getElementById('amount').value = '';
+      displayCodes();
+      alert('Code added successfully!');
+    }
+
+    function displayCodes() {
+      const list = document.getElementById('codeDisplay');
+      list.innerHTML = '';
+      for (const [code, amount] of Object.entries(redeemCodes)) {
+        const li = document.createElement('li');
+        li.textContent = `${code}: ${amount}৳`;
+        list.appendChild(li);
+      }
+    }
+
+    displayCodes();
+  </script>
 
 </body>
 </html>
